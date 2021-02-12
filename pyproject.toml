@@ -5,7 +5,7 @@ description = "Exposes several REST API endpoints for computation and prediction
 authors = ["johngiorgi <johnmgiorgi@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.7"
 fastapi = "^0.63.0"
 uvicorn = "^0.13.3"
 
