@@ -1,3 +1,8 @@
+![build](https://github.com/dcsil/athology-ml/workflows/build/badge.svg)
+[![codecov](https://codecov.io/gh/dcsil/athology-ml/branch/main/graph/badge.svg)](https://codecov.io/gh/dcsil/athology-ml)
+[![Checked with mypy](http://www.mypy-lang.org/static/mypy_badge.svg)](http://mypy-lang.org/)
+![GitHub](https://img.shields.io/github/license/dcsil/athology-ml?color=blue)
+
 # Athology-ML
 
 This repository contains our back-end, which exposes several REST API endpoints for computation and prediction on accelerometer data.
@@ -12,7 +17,7 @@ curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poet
 
 # Clone and move into the repo
 git clone https://github.com/dcsil/athology-ml
-cd athology_ml
+cd athology-ml
 
 # Install the package with poetry
 poetry install
