@@ -50,6 +50,7 @@ jobs:
         if: matrix.python-version == '3.9' && matrix.os == 'ubuntu-latest' && (github.event_name == 'push' || github.event_name == 'pull_request')
         uses: codecov/codecov-action@v1.2.1
         with:
+          token: ${{ secrets.CODECOV_TOKEN }}
           file: ./coverage.xml
           # Ignore codecov failures as the codecov server is not very reliable but we don't
           # want to report a failure in the github UI just because the coverage report failed
