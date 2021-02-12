@@ -9,7 +9,7 @@ This repository contains our back-end, which exposes several REST API endpoints 
 
 ## Installation
 
-This repository requires Python 3.8 or later. Installation is managed with [Poetry](https://python-poetry.org/).
+This repository requires Python 3.7 or later. Installation is managed with [Poetry](https://python-poetry.org/).
 
 ```bash
 # Install poetry for your system: https://python-poetry.org/docs/#installation
@@ -28,16 +28,40 @@ poetry install
 To start the web service, run
 
 ```bash
-uvicorn athology_ml.main:app \
+uvicorn app.main:app \
     --host 0.0.0.0 \
-    --port 5000 \
+    --port 80 \
     --reload
 ```
 
-For a health check on a running service, run
+For a health check, run
 
 ```
-curl -X GET "http://localhost:5000/" 
+curl -X GET "http://localhost:80/" 
 ```
 
-For documentation, visit [`http://localhost:5000/docs`](http://localhost:5000/docs) in your browser.
+For documentation, visit [`http://localhost:80/docs`](http://localhost:80/docs) in your browser.
+
+## Deploying with Docker
+
+To deploy with Docker, first build an image from the provided Dockerfile
+
+```bash
+docker build -t athology-ml .  
+```
+
+Then you can create a container and run the web service with
+
+```bash
+docker run -d --name athology-ml -p 80:80 athology-ml
+
+# Health check
+curl -X GET "http://localhost:80/" 
+```
+
+Once the container has been created, you can stop/start it with
+
+```bash
+docker stop athology-ml
+docker start athology-ml
+```
