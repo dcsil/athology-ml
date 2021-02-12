@@ -17,7 +17,7 @@ curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poet
 
 # Clone and move into the repo
 git clone https://github.com/dcsil/athology-ml
-cd athology_ml
+cd athology-ml
 
 # Install the package with poetry
 poetry install
