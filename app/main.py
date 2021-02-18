@@ -3,11 +3,12 @@ from http import HTTPStatus
 from datetime import datetime
 
 from fastapi import FastAPI, Request
+from app import __version__
 
 app = FastAPI(
     title="Athology Backend and ML Web Services",
     description="Exposes several REST API endpoints for computation and prediction on accelerometer data.",
-    version="0.1.0",
+    version=__version__,
 )
 
 
