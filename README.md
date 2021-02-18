@@ -1,5 +1,5 @@
 ![build](https://github.com/dcsil/athology-ml/workflows/build/badge.svg)
-[![codecov](https://codecov.io/gh/dcsil/athology-ml/branch/main/graph/badge.svg)](https://codecov.io/gh/dcsil/athology-ml)
+[![codecov](https://codecov.io/gh/dcsil/athology-ml/branch/main/graph/badge.svg?token=1g0QJXSYmo)](https://codecov.io/gh/dcsil/athology-ml)
 [![Checked with mypy](http://www.mypy-lang.org/static/mypy_badge.svg)](http://mypy-lang.org/)
 ![GitHub](https://img.shields.io/github/license/dcsil/athology-ml?color=blue)
 
