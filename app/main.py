@@ -1,9 +1,12 @@
+import random
+from datetime import datetime
 from functools import wraps
 from http import HTTPStatus
-from datetime import datetime
 
 from fastapi import FastAPI, Request
+
 from app import __version__
+from app.schemas import AccelerometerData
 
 app = FastAPI(
     title="Athology Backend and ML Web Services",
@@ -45,5 +48,21 @@ def _index(request: Request):
         "message": HTTPStatus.OK.phrase,
         "status-code": HTTPStatus.OK,
         "data": {},
+    }
+    return response
+
+
+@app.post("/jump-detection", tags=["Jump Detection"])
+@construct_response
+def _jump_detection(request: Request, accelerometer_data: AccelerometerData):
+    """Given one or more timesteps of accelerometer data, predicts whether the athelete is
+    jumping (`1`) or not (`0`) at each timestep. The predictions are available at
+    `response["data"]["is_jumping"]`.
+    """
+    is_jumping = random.randint(0, 1)
+    response = {
+        "message": HTTPStatus.OK.phrase,
+        "status-code": HTTPStatus.OK,
+        "data": {"is_jumping": is_jumping},
     }
     return response
