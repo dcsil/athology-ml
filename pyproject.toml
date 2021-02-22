@@ -7,7 +7,7 @@ authors = ["johngiorgi <johnmgiorgi@gmail.com>"]
 [tool.poetry.dependencies]
 python = "^3.7"
 fastapi = "^0.63.0"
-uvicorn = "^0.13.3"
+uvicorn = "^0.13.4"
 
 [tool.poetry.dev-dependencies]
 black = "^20.8b1"
