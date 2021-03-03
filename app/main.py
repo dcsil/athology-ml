@@ -2,8 +2,8 @@ import random
 from datetime import datetime
 from functools import wraps
 from http import HTTPStatus
-
 from fastapi import FastAPI, Request
+import typer
 
 from app import __version__
 from app.schemas import AccelerometerData
@@ -13,6 +13,17 @@ app = FastAPI(
     description="Exposes several REST API endpoints for computation and prediction on accelerometer data.",
     version=__version__,
 )
+
+try:
+    import sentry_sdk
+    from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
+
+    sentry_sdk.init(dsn="https://0c859b2275af41cf9f37eef75d2319ff@o358880.ingest.sentry.io/5603816")
+    app.add_middleware(SentryAsgiMiddleware)
+except ImportError:
+    typer.secho(
+        "sentry-sdk is not installed. Not monitoring exceptions.", fg=typer.colors.yellow, bold=True
+    ),
 
 
 def construct_response(f):
@@ -59,7 +70,7 @@ def _jump_detection(request: Request, accelerometer_data: AccelerometerData):
     jumping (`1`) or not (`0`) at each timestep. The predictions are available at
     `response["data"]["is_jumping"]`.
     """
-    is_jumping = random.randint(0, 1)
+    is_jumping = [random.randint(0, 1) for _ in range(len(accelerometer_data.x))]
     response = {
         "message": HTTPStatus.OK.phrase,
         "status-code": HTTPStatus.OK,

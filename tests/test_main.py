@@ -1,5 +1,6 @@
 from app.main import app
 from fastapi.testclient import TestClient
+import json
 
 client = TestClient(app)
 
@@ -19,7 +20,10 @@ def test_jump_detection(dummy_accelerometer_data: str):
     response = client.post("/jump-detection", dummy_accelerometer_data)
     assert response.status_code == 200
     assert response.json()["message"] == "OK"
-    assert response.json()["data"]["is_jumping"] in [0, 1]
+
+    expected_len = len(json.loads(dummy_accelerometer_data)["x"])
+    assert len(response.json()["data"]["is_jumping"]) == expected_len
+    assert [pred in [0, 1] for pred in response.json()["data"]["is_jumping"]]
 
 
 def test_jump_detection_unequal_timesteps(dummy_accelerometer_data_unequal_timesteps: str):
