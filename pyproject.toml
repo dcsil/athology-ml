@@ -3,12 +3,21 @@ name = "athology-ml"
 version = "0.1.0"
 description = "Exposes several REST API endpoints for computation and prediction on accelerometer data."
 authors = ["johngiorgi <johnmgiorgi@gmail.com>"]
+packages = [
+    { include = "app" },
+    { include = "ml" },
+]
 
 [tool.poetry.dependencies]
 python = "^3.7"
 fastapi = "^0.63.0"
 uvicorn = "^0.13.4"
 typer = "^0.3.2"
+tensorflow = "^2.4.1"
+keras-tuner = { version = "^1.0.2", optional = true }
+
+[tool.poetry.extras]
+tune = ["keras-tuner"]
 
 [tool.poetry.dev-dependencies]
 black = "^20.8b1"
@@ -20,6 +29,9 @@ pytest-cov = "^2.11.1"
 coverage = "^5.5"
 codecov = "^2.1.10"
 sentry-sdk = "^0.20.3"
+
+[tool.poetry.scripts]
+tune = "app.tune:app"
 
 [tool.black]
 line-length = 100

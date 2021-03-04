@@ -42,7 +42,7 @@ curl -X GET "http://localhost:80/"
 
 For documentation, visit [`http://localhost:80/docs`](http://localhost:80/docs) in your browser.
 
-## Deploying with Docker
+### Deploying with Docker
 
 To deploy with Docker, first build an image from the provided Dockerfile
 
@@ -65,3 +65,33 @@ Once the container has been created, you can stop/start it with
 docker stop athology-ml
 docker start athology-ml
 ```
+
+### Tuning your own Model
+
+If you want to tune your own model, please install with
+
+```
+poetry install -E tune
+```
+
+You can tune a model with the `tune` command. Call
+
+```
+tune --help
+```
+
+for usage details. In short, you will minimally need to a path to a `directory` structured like
+
+```
+.
+├── train
+│   ├── 20191006_rider0_Accelerometer_Manualtagged.csv
+│   └── 20200108_rider1_Accelerometer_Manualtagged.csv
+├── valid
+│   └── 20200108_rider3_Accelerometer_Manualtagged.csv
+└── test
+    ├── 20191006_rider4_Accelerometer_Manualtagged.csv
+    └── 20200106_rider5_Accelerometer_Manualtagged.csv
+```
+
+Where each CSV file is expected to contain accelerometer data that will be used for training, testing and validation.
