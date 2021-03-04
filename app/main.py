@@ -3,7 +3,6 @@ from datetime import datetime
 from functools import wraps
 from http import HTTPStatus
 from fastapi import FastAPI, Request
-import typer
 
 from app import __version__
 from app.schemas import AccelerometerData
@@ -21,9 +20,12 @@ try:
     sentry_sdk.init(dsn="https://0c859b2275af41cf9f37eef75d2319ff@o358880.ingest.sentry.io/5603816")
     app.add_middleware(SentryAsgiMiddleware)
 except ImportError:
-    typer.secho(
-        "sentry-sdk is not installed. Not monitoring exceptions.", fg=typer.colors.yellow, bold=True
-    ),
+    # TODO: Uncomment when I figure out how to setup poetry in the docker.
+    # See: https://izziswift.com/integrating-python-poetry-with-docker/
+    # typer.secho(
+    #     "sentry-sdk is not installed. Not monitoring exceptions.", fg=typer.colors.yellow, bold=True
+    # )
+    print("sentry-sdk is not installed. Not monitoring exceptions.")
 
 
 def construct_response(f):
