@@ -19,7 +19,7 @@ pytest = "^6.2.2"
 pytest-cov = "^2.11.1"
 coverage = "^5.5"
 codecov = "^2.1.10"
-sentry-sdk = "^0.20.3"
+sentry-sdk = "^1.0.0"
 
 [tool.black]
 line-length = 100
