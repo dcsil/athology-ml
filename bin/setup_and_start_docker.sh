@@ -3,10 +3,7 @@
 # Exit if any subcommand fails
 set -e
 
-bold=$(tput bold)
-normal=$(tput sgr0)
-
-echo "${bold}==== Setting up Docker ======================================================${normal}"
+echo "==== Setting up Docker ======================================================================"
 
 # Install Docker using homebrew (if not already installed)
 if (! docker --version); then
@@ -15,8 +12,8 @@ if (! docker --version); then
         brew install docker
     else
         if (! brew --version); then
-            test -d ~/.linuxbrew && eval $(~/.linuxbrew/bin/brew shellenv)
-            test -d /home/linuxbrew/.linuxbrew && eval $(/home/linuxbrew/.linuxbrew/bin/brew shellenv)
+            test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
+            test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
             test -r ~/.bash_profile && echo "eval \$($(brew --prefix)/bin/brew shellenv)" >>~/.bash_profile
             echo "eval \$($(brew --prefix)/bin/brew shellenv)" >>~/.profile
             brew install docker
