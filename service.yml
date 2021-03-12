@@ -1,0 +1,16 @@
+tools:
+  exceptions: https://sentry.io/organizations/dcsil/issues/?project=5603816
+  logging: https://dashboard.heroku.com/apps/athology-ml/logs
+  ci: https://github.com/dcsil/athology-ml/actions
+
+services:
+  production: https://athology-ml.herokuapp.com/
+
+docs:
+  getting_started: https://github.com/dcsil/athology-ml
+
+commands:
+  bootstrap: ./bin/bootstrap.sh
+  database: ""
+  server: ./bin/run_backend.sh
+  test: ./bin/test_backend.sh
