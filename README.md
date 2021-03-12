@@ -53,10 +53,7 @@ docker build -t athology-ml .
 Then you can create a container and run the web service with
 
 ```bash
-docker run -d --name athology-ml -p 80:80 athology-ml
-
-# Health check
-curl -X GET "http://localhost:80/" 
+docker run -d --name athology-ml -p 80:80 -e MODULE_NAME="athology_ml.app.main" -e PORT="80" athology-ml
 ```
 
 Once the container has been created, you can stop/start it with
@@ -66,21 +63,33 @@ docker stop athology-ml
 docker start athology-ml
 ```
 
-### Tuning your own Model
+### Train and Tune your own Model
 
-If you want to tune your own model, please install with
-
-```
-poetry install -E tune
-```
-
-You can tune a model with the `tune` command. Call
+If you want to train and tune your own model, please install with
 
 ```
-tune --help
+poetry install -E train
 ```
 
-for usage details. In short, you will minimally need to a path to a `directory` structured like
+Each model has its own subcommand. To see each subcommand, call
+
+```bash
+athology-ml --help
+```
+
+Let's train and tune a `jump-detection` model. To do this, call the `train` command
+
+```
+athology-ml jump-detection train path/to/dataset
+```
+
+For details on the arguments and options of any subcommand, invoke them with `--help`
+
+```
+athology-ml jump-detection train --help
+```
+
+In this case, we minimally need a path to a `directory` with a dataset of CSV files, structured like
 
 ```
 .
