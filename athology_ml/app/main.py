@@ -1,16 +1,15 @@
 from datetime import datetime
 from functools import wraps
 from http import HTTPStatus
-from typing import List
 
 import numpy as np
-import tensorflow as tf
 import typer
-from fastapi import FastAPI, Request
-from ml.jump_detection.model import FeatureExtractor
+from athology_ml import __version__
+from athology_ml.app.schemas import AccelerometerData
+from athology_ml.app.util import load_jump_detection_model
+from fastapi import Depends, FastAPI, Request
+from tensorflow.keras import Model
 
-from app import __version__
-from app.schemas import AccelerometerData, Model
 
 app = FastAPI(
     title="Athology Backend and ML Web Services",
@@ -26,11 +25,8 @@ try:
     app.add_middleware(SentryAsgiMiddleware)
 except ImportError:
     typer.secho(
-        "sentry-sdk is not installed. Not monitoring exceptions.", fg=typer.colors.yellow, bold=True
+        "sentry-sdk is not installed. Not monitoring exceptions.", fg=typer.colors.YELLOW, bold=True
     ),
-
-
-model = Model()
 
 
 def construct_response(f):
@@ -58,21 +54,6 @@ def construct_response(f):
     return wrap
 
 
-def _make_prediction(accelerometer_data: AccelerometerData) -> List[bool]:
-    input_data = np.fromiter(
-        accelerometer_data.x + accelerometer_data.y + accelerometer_data.z, dtype=np.int32
-    ).reshape(1, -1, 3)
-    is_jumping = (model.model.predict(input_data) >= 0.5).reshape(-1).tolist()
-    return is_jumping
-
-
-@app.on_event("startup")
-def app_startup():
-    model.model = tf.keras.models.load_model(
-        "pretrained_models/jump_detection.h5", custom_objects={"FeatureExtractor": FeatureExtractor()}
-    )
-
-
 @app.get("/", tags=["General"])
 @construct_response
 def _index(request: Request):
@@ -87,12 +68,21 @@ def _index(request: Request):
 
 @app.post("/jump-detection", tags=["Jump Detection"])
 @construct_response
-def _jump_detection(request: Request, accelerometer_data: AccelerometerData):
+def _jump_detection(
+    request: Request,
+    accelerometer_data: AccelerometerData,
+    model: Model = Depends(load_jump_detection_model),
+):
     """Given one or more timesteps of accelerometer data, predicts whether the athelete is
     jumping (`True`) or not (`False`) at each timestep. The predictions are available at
     `response["data"]["is_jumping"]`.
     """
-    is_jumping = _make_prediction(accelerometer_data)
+    # The data must be converted from a list of floats to a numpy array of the correct shape.
+    # np.fromiter should be slightly faster than np.asarray.
+    input_data = np.fromiter(
+        accelerometer_data.x + accelerometer_data.y + accelerometer_data.z, dtype=np.int32
+    ).reshape(1, -1, 3)
+    is_jumping = (model.predict(input_data) >= 0.5).reshape(-1).tolist()
 
     response = {
         "message": HTTPStatus.OK.phrase,

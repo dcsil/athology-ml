@@ -1,23 +1,11 @@
-import random
-
-import numpy as np
 import tensorflow as tf
 import typer
+from athology_ml.ml.jump_detection.modules import FeatureExtractor
+from athology_ml.ml.jump_detection.util import set_seeds
 from kerastuner import HyperModel
 from tensorflow import keras
 from tensorflow.keras import layers
-
-SEED = 13370
-NUMPY_SEED = 1337
-TF_SEED = 133
-
-random.seed(SEED)
-np.random.seed(NUMPY_SEED)
-tf.random.set_seed(TF_SEED)
-
-BATCH_SIZE = 1
-NUM_TIMESTEPS = 128
-BUFFER_SIZE = 10000
+from tensorflow.keras.layers.experimental.preprocessing import Normalization
 
 METRICS = [
     #   keras.metrics.TruePositives(name='tp'),
@@ -30,20 +18,31 @@ METRICS = [
     keras.metrics.AUC(name="auc"),
 ]
 
-app = typer.Typer()
-
-
-class FeatureExtractor(layers.Layer):
-    """Extracts additional features from our inputs, like sum, and norm."""
-
-    def call(self, inputs):
-        sum = tf.math.reduce_sum(inputs, axis=-1, keepdims=True, name="sum")
-        norm = tf.norm(inputs, axis=-1, keepdims=True, name="norm")
-        return tf.concat([inputs, sum, norm], axis=-1)
+app = typer.Typer(callback=set_seeds)
 
 
 class JumpPredictor(HyperModel):
-    def __init__(self, normalizer=None, classifier_bias_init=None):
+    """A HyperModel that implements the jump detection model. Can be used with Keras Tuner for
+    hyperparameter tuning. See the [Keras Tuner](https://keras-team.github.io/keras-tuner/) docs
+    for more details.
+
+    # Parameters
+
+    normalizer : Normalization
+        A normalization layer that will be used to normalize the input features to the model.
+        It is expected that this layer has been initialized and adapted to the training data.
+
+    classifier_bias_init : float
+        A value to initialize the bias unit of the classification layer with. when the data is
+        highly unbalanced, it can be useful to set this such that the model is heavily biased
+        towards the most popular class during initialization. See
+        [here](https://www.tensorflow.org/tutorials/structured_data/imbalanced_data#optional_set_the_correct_initial_bias)
+        for more details.
+    """
+
+    def __init__(
+        self, normalizer: Normalization = None, classifier_bias_init: float = None
+    ) -> None:
         self._normalizer = normalizer
         self._classifier_bias_initializer = (
             tf.keras.initializers.Constant(value=classifier_bias_init)
@@ -58,7 +57,6 @@ class JumpPredictor(HyperModel):
             x = self._normalizer(x)
         x = layers.Conv1D(
             filters=hp.Choice("filters", values=[8, 16, 32], default=32),
-            # TODO: Try a bigger kernel size!
             kernel_size=hp.Choice("kernel_size", values=[3, 5, 10], default=5),
             strides=1,
             padding="causal",

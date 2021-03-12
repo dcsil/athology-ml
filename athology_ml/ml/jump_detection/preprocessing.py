@@ -4,6 +4,7 @@ from typing import Optional, Tuple
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.layers.experimental import preprocessing
+from tensorflow.data import Dataset
 
 BATCH_SIZE = 1
 NUM_TIMESTEPS = 128
@@ -21,7 +22,7 @@ def pack_features_vector(features, labels):
     return features, labels
 
 
-def get_datasets(directory: str, **kwargs) -> Tuple[tf.data.Dataset]:
+def get_datasets(directory: str, **kwargs) -> Tuple[Dataset, Dataset, Dataset]:
     """Return a tuple of tensorflow `Dataset`s corresponding to the CSV files at
     `directory/TRAIN_FILE_PATTERN`, `directory/VALID_FILE_PATTERN`, and `directory/TEST_FILE_PATTERN`.
     Extra `**kwargs` are passed to `tf.data.experimental.make_csv_dataset`, overwriting sensible
@@ -46,15 +47,15 @@ def get_datasets(directory: str, **kwargs) -> Tuple[tf.data.Dataset]:
     valid_dataset = tf.data.experimental.make_csv_dataset(valid_file_pattern, **dataset_kwargs)
     test_dataset = tf.data.experimental.make_csv_dataset(test_file_pattern, **dataset_kwargs)
 
-    train_dataset = train_dataset.map(pack_features_vector)
-    valid_dataset = valid_dataset.map(pack_features_vector)
-    test_dataset = test_dataset.map(pack_features_vector)
+    train_dataset = train_dataset.map(pack_features_vector, num_parallel_calls=tf.data.AUTOTUNE)
+    valid_dataset = valid_dataset.map(pack_features_vector, num_parallel_calls=tf.data.AUTOTUNE)
+    test_dataset = test_dataset.map(pack_features_vector, num_parallel_calls=tf.data.AUTOTUNE)
 
     return train_dataset, valid_dataset, test_dataset
 
 
 def get_features_and_labels(
-    dataset: tf.data.Dataset, num_rows: Optional[int] = None
+    dataset: Dataset, num_rows: Optional[int] = None
 ) -> Tuple[np.ndarray, np.ndarray]:
     """Returns a tuple of NumPy arrays, containing the features and labels from `dataset`.
     If `num_rows` is provided, only the first `num_rows` of data are included.
@@ -80,7 +81,7 @@ def get_features_and_labels(
 
 
 def get_classifier_bias_init(labels: np.ndarray) -> float:
-    """Computes a more sensible initial value for the classifiers bias based on the distribution
+    """Computes a more sensible initial value for the classifiers bias based on the ratio
     of negative to positive class instances in labels. For more details,
     see: https://www.tensorflow.org/tutorials/structured_data/imbalanced_data#optional_set_the_correct_initial_bias
     """

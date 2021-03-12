@@ -1,14 +1,6 @@
 from typing import List
 
-import tensorflow as tf
 from pydantic import BaseModel, root_validator
-
-
-class Model(BaseModel):
-    model: tf.keras.Model = None
-
-    class Config:
-        arbitrary_types_allowed = True
 
 
 class AccelerometerData(BaseModel):

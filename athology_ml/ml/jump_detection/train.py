@@ -1,9 +1,9 @@
 import kerastuner
 import typer
 from kerastuner.tuners import RandomSearch
-from ml.jump_detection import preprocessing
-from ml.jump_detection.model import JumpPredictor
-from ml.jump_detection.util import KERAS_TUNER_SEED, print_baselines, set_seeds
+from athology_ml.ml.jump_detection import preprocessing
+from athology_ml.ml.jump_detection.model import JumpPredictor
+from athology_ml.ml.jump_detection.util import KERAS_TUNER_SEED, print_baselines, set_seeds
 
 app = typer.Typer(callback=set_seeds)
 
@@ -11,7 +11,16 @@ BUFFER_SIZE = 10000
 
 
 @app.command()
-def main(directory: str) -> None:
+def train(
+    directory: str = typer.Argument(
+        ...,
+        help=(
+            "A directory that contains three CSVs: train.tsv, valid.tsv and test.tsv that will be"
+            " used to train, tune and evaluate the model."
+        ),
+    )
+) -> None:
+    """Train a model to perform jump detection on raw accelerometer data."""
     train_dataset, valid_dataset, test_dataset = preprocessing.get_datasets(directory)
     features, labels = preprocessing.get_features_and_labels(train_dataset)
     classifier_bias_init = preprocessing.get_classifier_bias_init(labels)
