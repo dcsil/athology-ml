@@ -13,6 +13,6 @@ RUN curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-
 # Copy using poetry.lock* in case it doesn't exist yet
 COPY ./pyproject.toml ./poetry.lock* /app/
 
-RUN poetry install --no-root --no-dev
+RUN poetry install --no-root --no-dev --extras "production"
 
 COPY ./athology_ml/ /app/athology_ml
