@@ -84,10 +84,16 @@ def get_classifier_bias_init(labels: np.ndarray) -> float:
     """Computes a more sensible initial value for the classifiers bias based on the ratio
     of negative to positive class instances in labels. For more details,
     see: https://www.tensorflow.org/tutorials/structured_data/imbalanced_data#optional_set_the_correct_initial_bias
+
+    Returns None if there is no support for either the positive or negative class.
+    Raises a value error if labels is an empty array.
     """
+    num_labels = labels.size
+    if not num_labels:
+        raise ValueError(f"Labels must be a non-empty array. Got shape: {labels.shape}")
     pos = labels.sum()
-    neg = labels.shape[0] - pos
-    classifier_bias = np.log(pos / neg)
+    neg = labels.size - pos
+    classifier_bias = np.log(pos / neg) if pos > 0 and neg > 0 else None
     return classifier_bias
 
 
@@ -95,6 +101,10 @@ def get_normalizer(features: np.ndarray):
     """Returns a Keras compatible normalization layer trained on `features`."""
     # Compute the sum and norm of our accelerometer data.
     # Train a normalization layer on all features.
+    if any(not dim for dim in features.shape):
+        raise ValueError(
+            f"All dimensions in features must be non-zero. Got shape: {features.shape}"
+        )
     sum_ = np.sum(features, axis=-1, keepdims=True)
     norm = np.linalg.norm(features, axis=-1, keepdims=True)
     features = np.concatenate((features, sum_, norm), axis=-1)
