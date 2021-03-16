@@ -2,7 +2,7 @@ import kerastuner
 import typer
 from kerastuner.tuners import RandomSearch
 from athology_ml.ml.jump_detection import preprocessing
-from athology_ml.ml.jump_detection.model import JumpPredictor
+from athology_ml.ml.jump_detection.model import JumpDetector
 from athology_ml.ml.jump_detection.util import KERAS_TUNER_SEED, print_baselines, set_seeds
 
 app = typer.Typer(callback=set_seeds)
@@ -37,7 +37,7 @@ def train(
     # See https://www.tensorflow.org/api_docs/python/tf/data/Dataset#shuffle
     train_dataset = train_dataset.shuffle(BUFFER_SIZE, reshuffle_each_iteration=True)
 
-    hypermodel = JumpPredictor(normalizer=normalizer, classifier_bias_init=classifier_bias_init)
+    hypermodel = JumpDetector(normalizer=normalizer, classifier_bias_init=classifier_bias_init)
 
     class_weight_0 = 0.5
     class_weight_1 = 5
