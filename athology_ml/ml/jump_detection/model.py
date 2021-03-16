@@ -21,7 +21,7 @@ METRICS = [
 app = typer.Typer(callback=set_seeds)
 
 
-class JumpPredictor(HyperModel):
+class JumpDetector(HyperModel):
     """A HyperModel that implements the jump detection model. Can be used with Keras Tuner for
     hyperparameter tuning. See the [Keras Tuner](https://keras-team.github.io/keras-tuner/) docs
     for more details.
