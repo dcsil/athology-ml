@@ -1,7 +1,6 @@
 ![build](https://github.com/dcsil/athology-ml/workflows/build/badge.svg)
 [![codecov](https://codecov.io/gh/dcsil/athology-ml/branch/main/graph/badge.svg?token=1g0QJXSYmo)](https://codecov.io/gh/dcsil/athology-ml)
 [![Checked with mypy](http://www.mypy-lang.org/static/mypy_badge.svg)](http://mypy-lang.org/)
-![GitHub](https://img.shields.io/github/license/dcsil/athology-ml?color=blue)
 
 # Athology-ML
 
@@ -42,7 +41,7 @@ curl -X GET "http://localhost:80/"
 
 For documentation, visit [`http://localhost:80/docs`](http://localhost:80/docs) in your browser.
 
-## Deploying with Docker
+### Deploying with Docker
 
 To deploy with Docker, first build an image from the provided Dockerfile
 
@@ -53,10 +52,7 @@ docker build -t athology-ml .
 Then you can create a container and run the web service with
 
 ```bash
-docker run -d --name athology-ml -p 80:80 athology-ml
-
-# Health check
-curl -X GET "http://localhost:80/" 
+docker run -d --name athology-ml -p 80:80 -e MODULE_NAME="athology_ml.app.main" -e PORT="80" athology-ml
 ```
 
 Once the container has been created, you can stop/start it with
@@ -65,3 +61,45 @@ Once the container has been created, you can stop/start it with
 docker stop athology-ml
 docker start athology-ml
 ```
+
+### Train and Tune your own Model
+
+If you want to train and tune your own model, please install with
+
+```
+poetry install -E train
+```
+
+Each model has its own subcommand. To see each subcommand, call
+
+```bash
+athology-ml --help
+```
+
+Let's train and tune a `jump-detection` model. To do this, call the `train` command
+
+```
+athology-ml jump-detection train path/to/dataset
+```
+
+For details on the arguments and options of any subcommand, invoke them with `--help`
+
+```
+athology-ml jump-detection train --help
+```
+
+In this case, we minimally need a path to a `directory` with a dataset of CSV files, structured like
+
+```
+.
+├── train
+│   ├── 20191006_rider0_Accelerometer_Manualtagged.csv
+│   └── 20200108_rider1_Accelerometer_Manualtagged.csv
+├── valid
+│   └── 20200108_rider3_Accelerometer_Manualtagged.csv
+└── test
+    ├── 20191006_rider4_Accelerometer_Manualtagged.csv
+    └── 20200106_rider5_Accelerometer_Manualtagged.csv
+```
+
+Where each CSV is expected to contain the columns `"x-axis (g)"`, `"y-axis (g)"`, `"z-axis (g)"`, and `"is_air"`.

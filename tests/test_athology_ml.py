@@ -1,4 +1,4 @@
-from app import __version__
+from athology_ml import __version__
 
 
 def test_version():
