@@ -102,4 +102,4 @@ In this case, we minimally need a path to a `directory` with a dataset of CSV fi
     └── 20200106_rider5_Accelerometer_Manualtagged.csv
 ```
 
-Where each CSV file is expected to contain accelerometer data that will be used for training, testing and validation.
+Where each CSV is expected to contain the columns `"x-axis (g)"`, `"y-axis (g)"`, `"z-axis (g)"`, and `"is_air"`.
