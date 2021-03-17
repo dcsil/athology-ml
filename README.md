@@ -76,7 +76,7 @@ Each model has its own subcommand. To see each subcommand, call
 athology-ml --help
 ```
 
-Let's train and tune a `jump-detection` model. To do this, call the `train` command
+For example, to train and tune a `jump-detection` model, call
 
 ```
 athology-ml jump-detection train path/to/dataset

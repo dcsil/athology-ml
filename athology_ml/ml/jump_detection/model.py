@@ -52,41 +52,44 @@ class JumpDetector(HyperModel):
 
     def build(self, hp):
         inputs = keras.Input(shape=(None, 3))
-        x = FeatureExtractor()(inputs)
-        if self._normalizer is not None:
-            x = self._normalizer(x)
-        x = layers.Conv1D(
+
+        feature_extractor = FeatureExtractor()
+        conv_1d = layers.Conv1D(
             filters=hp.Choice("filters", values=[8, 16, 32], default=32),
-            kernel_size=hp.Choice("kernel_size", values=[3, 5, 10], default=5),
+            kernel_size=hp.Choice("kernel_size", values=[3, 5, 10, 12], default=5),
             strides=1,
             padding="causal",
             activation="relu",
-        )(x)
-
-        x = layers.Bidirectional(
+        )
+        dropout = layers.Dropout(hp.Choice("dropout_conv", values=[0.0, 0.1, 0.2, 0.25]))
+        lstm_0 = layers.Bidirectional(
             layers.LSTM(
-                hp.Choice("units_0", values=[32, 64, 128], default=128),
+                hp.Choice("units_0", values=[32, 64, 128, 256], default=128),
                 return_sequences=True,
-                recurrent_dropout=hp.Choice(
-                    "recurrent_dropout_0", values=[0.0, 0.1, 0.25], default=0.1
-                ),
+                dropout=hp.Choice("dropout_lstm_0", values=[0.0, 0.1, 0.2, 0.25], default=0.1),
             )
-        )(x)
-
-        x = layers.Bidirectional(
+        )
+        lstm_1 = layers.Bidirectional(
             layers.LSTM(
-                hp.Choice("units_1", values=[32, 64, 128], default=128),
+                hp.Choice("units_1", values=[32, 64, 128, 256], default=128),
                 return_sequences=True,
-                recurrent_dropout=hp.Choice(
-                    "recurrent_dropout_1", values=[0.0, 0.1, 0.25], default=0.1
-                ),
+                dropout=hp.Choice("dropout_lstm_1", values=[0.0, 0.1, 0.2, 0.25], default=0.1),
             )
-        )(x)
-
-        x = layers.Dense(
+        )
+        classifier = layers.Dense(
             1, activation="sigmoid", bias_initializer=self._classifier_bias_initializer
-        )(x)
-        outputs = layers.Reshape((-1,))(x)
+        )
+        reshape = layers.Reshape((-1,))
+
+        x = feature_extractor(inputs)
+        if self._normalizer:
+            x = self._normalizer(x)
+        x = conv_1d(x)
+        x = dropout(x)
+        x = lstm_0(x)
+        x = lstm_1(x)
+        x = classifier(x)
+        outputs = reshape(x)
 
         model = keras.Model(inputs=inputs, outputs=outputs)
 
