@@ -6,8 +6,7 @@ import tensorflow as tf
 from tensorflow.keras.layers.experimental import preprocessing
 from tensorflow.data import Dataset
 
-BATCH_SIZE = 1
-NUM_TIMESTEPS = 128
+BUFFER_SIZE = 500
 
 TRAIN_FILE_PATTERN = "train/*.csv"
 VALID_FILE_PATTERN = "valid/*.csv"
@@ -15,14 +14,49 @@ TEST_FILE_PATTERN = "test/*.csv"
 
 
 def pack_features_vector(features, labels):
-    """Pack the features into a single array."""
+    """Pack the features into a single array. Adapted from:
+    https://www.tensorflow.org/tutorials/customization/custom_training_walkthrough#create_a_tfdatadataset
+    """
     features = tf.stack(list(features.values()), axis=1)
-    # Input data for the LSTM must be 3D, add a leading axis
-    features = tf.expand_dims(features, axis=0)
+    # Remove all but the leading dimension.
+    # We set up batching outside of this function.
+    features = tf.reshape(features, shape=(-1,))
+    labels = tf.reshape(labels, shape=(-1,))
+
     return features, labels
 
 
-def get_datasets(directory: str, **kwargs) -> Tuple[Dataset, Dataset, Dataset]:
+def squeeze_labels_vector(features, labels):
+    """Remove the trailing dimension of labels."""
+    labels = tf.squeeze(labels, axis=-1)
+    return features, labels
+
+
+def cache_shuffle_batch_prefetch(
+    dataset: Dataset, batch_size: int, shuffle: bool = False, buffer_size: Optional[int] = None
+):
+    """Given a `dataset`, returns a new `dataset` which generates batches of size `batch_size`.
+    If `shuffle`, the data is shuffled by randomly choosing items from `buffer_size` number of
+    examples. Follows best practices for optimized data loading by caching and prefetching the data.
+
+    See the individual tf.data.Dataset methods for more details:
+
+    - [cache](https://www.tensorflow.org/api_docs/python/tf/data/Dataset#cache)
+    - [shuffle](https://www.tensorflow.org/api_docs/python/tf/data/Dataset#shuffle)
+    - [batch](https://www.tensorflow.org/api_docs/python/tf/data/Dataset#batch)
+    - [prefetch](https://www.tensorflow.org/api_docs/python/tf/data/Dataset#prefetch)
+    """
+    dataset = dataset.cache()
+    if shuffle:
+        dataset = dataset.shuffle(buffer_size=buffer_size, reshuffle_each_iteration=True)
+    dataset = dataset.batch(batch_size=batch_size, drop_remainder=True)
+    dataset = dataset.prefetch(tf.data.AUTOTUNE)
+    return dataset
+
+
+def get_datasets(
+    directory: str, batch_size: int, num_timesteps: int, **kwargs
+) -> Tuple[Dataset, Dataset, Dataset]:
     """Return a tuple of tensorflow `Dataset`s corresponding to the CSV files at
     `directory/TRAIN_FILE_PATTERN`, `directory/VALID_FILE_PATTERN`, and `directory/TEST_FILE_PATTERN`.
     Extra `**kwargs` are passed to `tf.data.experimental.make_csv_dataset`, overwriting sensible
@@ -30,7 +64,7 @@ def get_datasets(directory: str, **kwargs) -> Tuple[Dataset, Dataset, Dataset]:
     see: https://www.tensorflow.org/api_docs/python/tf/data/experimental/make_csv_dataset
     """
     dataset_kwargs = {
-        "batch_size": NUM_TIMESTEPS,  # This is actually the number of timesteps within a window
+        "batch_size": 1,  # We will set up timesteps and batching below
         "label_name": "is_air",
         "select_columns": ["x-axis (g)", "y-axis (g)", "z-axis (g)", "is_air"],
         "header": True,
@@ -47,9 +81,32 @@ def get_datasets(directory: str, **kwargs) -> Tuple[Dataset, Dataset, Dataset]:
     valid_dataset = tf.data.experimental.make_csv_dataset(valid_file_pattern, **dataset_kwargs)
     test_dataset = tf.data.experimental.make_csv_dataset(test_file_pattern, **dataset_kwargs)
 
+    # Stack the features and labels of the dataset into tensors
     train_dataset = train_dataset.map(pack_features_vector, num_parallel_calls=tf.data.AUTOTUNE)
     valid_dataset = valid_dataset.map(pack_features_vector, num_parallel_calls=tf.data.AUTOTUNE)
     test_dataset = test_dataset.map(pack_features_vector, num_parallel_calls=tf.data.AUTOTUNE)
+
+    # Create the first batch dimension, which corresponds to timesteps
+    train_dataset = train_dataset.batch(num_timesteps, drop_remainder=True)
+    valid_dataset = valid_dataset.batch(num_timesteps, drop_remainder=True)
+    test_dataset = test_dataset.batch(num_timesteps, drop_remainder=True)
+
+    # Batching introduces an unnecessary trailing dimension in the labels, drop it
+    train_dataset = train_dataset.map(squeeze_labels_vector, num_parallel_calls=tf.data.AUTOTUNE)
+    valid_dataset = valid_dataset.map(squeeze_labels_vector, num_parallel_calls=tf.data.AUTOTUNE)
+    test_dataset = test_dataset.map(squeeze_labels_vector, num_parallel_calls=tf.data.AUTOTUNE)
+
+    # Finally, we setup traditional batching, using a helper function that also implements best
+    # practices (e.g. caching, prefetching)
+    train_dataset = cache_shuffle_batch_prefetch(
+        train_dataset, batch_size=batch_size, shuffle=True, buffer_size=BUFFER_SIZE
+    )
+    valid_dataset = cache_shuffle_batch_prefetch(
+        valid_dataset, batch_size=batch_size, shuffle=False, buffer_size=BUFFER_SIZE
+    )
+    test_dataset = cache_shuffle_batch_prefetch(
+        test_dataset, batch_size=batch_size, shuffle=False, buffer_size=BUFFER_SIZE
+    )
 
     return train_dataset, valid_dataset, test_dataset
 
