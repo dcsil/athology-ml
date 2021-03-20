@@ -16,3 +16,7 @@ COPY ./pyproject.toml ./poetry.lock* /app/
 RUN poetry install --no-root --no-dev --extras "production"
 
 COPY ./athology_ml/ /app/athology_ml
+
+# Because our main.py lives somewhere other than the default, we need to tell FastAPI where.
+# See: https://github.com/tiangolo/uvicorn-gunicorn-fastapi-docker#module_name
+ENV MODULE_NAME="athology_ml.app.main"
