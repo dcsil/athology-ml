@@ -1,5 +1,5 @@
 import kerastuner as kt
-from athology_ml.ml.jump_detection import JumpDetector
+from athology_ml.ml.jump_detection.model import JumpDetector
 from tensorflow.keras.layers.experimental import preprocessing
 
 
