@@ -6,7 +6,7 @@ import numpy as np
 import pymongo
 import typer
 from athology_ml import __version__
-from athology_ml.app.schemas import AccelerometerData, AthleteSession
+from athology_ml.app.schemas import AccelerometerData, AthleteSession, AthleteName
 from athology_ml.app.util import load_jump_detection_model
 from bson.objectid import ObjectId
 from fastapi import Depends, FastAPI, Request
@@ -29,10 +29,11 @@ except ImportError:
         "sentry-sdk is not installed. Not monitoring exceptions.", fg=typer.colors.YELLOW, bold=True
     ),
 
+
 client = pymongo.MongoClient(
-    "mongodb+srv://johngiorgi:Sl8gUie8fu41ulhA@athology-dev.4fnaw.mongodb.net/athology-dev?retryWrites=true&w=majority"
+    "mongodb+srv://admin:Dvr4smYFR0vYjCEd@jump-detection.mwnew.mongodb.net/jump-detection?retryWrites=true&w=majority"
 )
-db = client["athology"]
+db = client["development"]
 col = db["athletes"]
 
 
@@ -78,7 +79,7 @@ def _index(request: Request):
 def _get_all_athletes(request: Request):
     """Returns the `_id`, `first_name` and `last_name` for all athletes."""
     results = []
-    for result in col.find({}, {"_id": 1, "first_name": 1, "last_name": 1}):
+    for result in col.find({}, {"_id": 1, "name": 1}):
         result["_id"] = str(result["_id"])
         results.append(result)
 
@@ -101,11 +102,10 @@ def _get_athlete_by_id(request: Request, _id: str):
 
 @app.post("/create-new-athlete", tags=["Database"])
 @construct_response
-def _create_new_athlete(request: Request, first_name: str, last_name: str):
-    """Creates a new athlete with `first_name` and `last_name` and returns their `_id`.
-    created athlete.
-    """
-    result = col.insert_one({"first_name": first_name, "last_name": last_name})
+def _create_new_athlete(request: Request, name: AthleteName):
+    """Creates a new athlete with `name` returns their `_id`."""
+    print(name.dict())
+    result = col.insert_one({"name": name.dict()})
 
     response = {
         "message": HTTPStatus.OK.phrase,
