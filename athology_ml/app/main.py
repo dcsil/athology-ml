@@ -5,7 +5,7 @@ from http import HTTPStatus
 import numpy as np
 import typer
 from athology_ml import __version__
-from athology_ml.app.schemas import AccelerometerData, AthleteData, AthleteSession
+from athology_ml.app.schemas import AccelerometerData, AthleteSession
 from athology_ml.app.util import load_jump_detection_model
 from fastapi import Depends, FastAPI, Request
 from tensorflow.keras import Model
