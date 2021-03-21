@@ -5,7 +5,7 @@ from http import HTTPStatus
 import numpy as np
 import typer
 from athology_ml import __version__
-from athology_ml.app.schemas import AccelerometerData
+from athology_ml.app.schemas import AccelerometerData, AtheleteData
 from athology_ml.app.util import load_jump_detection_model
 from fastapi import Depends, FastAPI, Request
 from tensorflow.keras import Model
@@ -66,7 +66,47 @@ def _index(request: Request):
     return response
 
 
-@app.post("/jump-detection", tags=["Jump Detection"])
+@app.get("/get-all_athletes", tags=["Database"])
+@construct_response
+def _get_all_athletes(request: Request):
+    response = {
+        "message": HTTPStatus.OK.phrase,
+        "status-code": HTTPStatus.OK,
+    }
+    return response
+
+
+@app.get("/get-athelete-by-id", tags=["Database"])
+@construct_response
+def _get_athelete_by_id(request: Request, _id: str):
+    response = {
+        "message": HTTPStatus.OK.phrase,
+        "status-code": HTTPStatus.OK,
+    }
+    return response
+
+
+@app.post("/create-new-athlete", tags=["Database"])
+@construct_response
+def _create_new_athlete(request: Request, name: str):
+    response = {
+        "message": HTTPStatus.OK.phrase,
+        "status-code": HTTPStatus.OK,
+    }
+    return response
+
+
+@app.post("/add-athlete-session", tags=["Database"])
+@construct_response
+def _add_athelete_session(request: Request, athlete_data: AtheleteData):
+    response = {
+        "message": HTTPStatus.OK.phrase,
+        "status-code": HTTPStatus.OK,
+    }
+    return response
+
+
+@app.post("/jump-detection", tags=["Prediction"])
 @construct_response
 def _jump_detection(
     request: Request,
