@@ -44,27 +44,38 @@ class AccelerometerData(BaseModel):
         }
 
 
-class AtheleteJump(BaseModel):
+class AthleteJump(BaseModel):
     load: float
     height: float
 
 
-class AtheleteSession(BaseModel):
+class AthleteSession(BaseModel):
     date: str
     timestamp: str
-    jumps: List[AtheleteJump]
+    jumps: List[AthleteJump]
     num_jumps: int
     max_load: float
     max_height: float
 
+    class Config:
+        schema_extra = {
+            "example": {
+                "date": "30/01/2021",
+                "timestamp": "1612021861",
+                "jumps": [{"load": 4.67, "height": 1.23}],
+                "num_jumps": 1,
+                "max_load": 4.67,
+                "max_height": 1.23,
+            }
+        }
 
-class AtheleteData(BaseModel):
+
+class AthleteData(BaseModel):
     _id: str
     name: str
-    sessions: List[AtheleteSession]
+    sessions: List[AthleteSession]
 
     class Config:
-        # This will be auto-populated as an example in the docs.
         schema_extra = {
             "example": {
                 "_id": "28187aa4-89c5-11eb-8dcd-0242ac130003",
