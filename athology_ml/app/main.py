@@ -5,7 +5,7 @@ from http import HTTPStatus
 import numpy as np
 import typer
 from athology_ml import __version__
-from athology_ml.app.schemas import AccelerometerData, AtheleteData
+from athology_ml.app.schemas import AccelerometerData, AthleteData, AthleteSession
 from athology_ml.app.util import load_jump_detection_model
 from fastapi import Depends, FastAPI, Request
 from tensorflow.keras import Model
@@ -76,9 +76,9 @@ def _get_all_athletes(request: Request):
     return response
 
 
-@app.get("/get-athelete-by-id", tags=["Database"])
+@app.get("/get-athlete-by-id", tags=["Database"])
 @construct_response
-def _get_athelete_by_id(request: Request, _id: str):
+def _get_Athlete_by_id(request: Request, _id: str):
     response = {
         "message": HTTPStatus.OK.phrase,
         "status-code": HTTPStatus.OK,
@@ -98,7 +98,7 @@ def _create_new_athlete(request: Request, name: str):
 
 @app.post("/add-athlete-session", tags=["Database"])
 @construct_response
-def _add_athelete_session(request: Request, athlete_data: AtheleteData):
+def _add_Athlete_session(request: Request, _id: str, athlete_session: AthleteSession):
     response = {
         "message": HTTPStatus.OK.phrase,
         "status-code": HTTPStatus.OK,
@@ -113,7 +113,7 @@ def _jump_detection(
     accelerometer_data: AccelerometerData,
     model: Model = Depends(load_jump_detection_model),
 ):
-    """Given one or more timesteps of accelerometer data, predicts whether the athelete is
+    """Given one or more timesteps of accelerometer data, predicts whether the athlete is
     jumping (`True`) or not (`False`) at each timestep. The predictions are available at
     `response["data"]["is_jumping"]`.
     """
