@@ -66,7 +66,7 @@ def _index(request: Request):
     return response
 
 
-@app.get("/get-all_athletes", tags=["Database"])
+@app.get("/get-all-athletes", tags=["Database"])
 @construct_response
 def _get_all_athletes(request: Request):
     response = {
