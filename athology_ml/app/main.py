@@ -3,13 +3,14 @@ from functools import wraps
 from http import HTTPStatus
 
 import numpy as np
+import pymongo
 import typer
 from athology_ml import __version__
 from athology_ml.app.schemas import AccelerometerData, AthleteSession
 from athology_ml.app.util import load_jump_detection_model
+from bson.objectid import ObjectId
 from fastapi import Depends, FastAPI, Request
 from tensorflow.keras import Model
-
 
 app = FastAPI(
     title="Athology Backend and ML Web Services",
@@ -27,6 +28,12 @@ except ImportError:
     typer.secho(
         "sentry-sdk is not installed. Not monitoring exceptions.", fg=typer.colors.YELLOW, bold=True
     ),
+
+client = pymongo.MongoClient(
+    "mongodb+srv://johngiorgi:Sl8gUie8fu41ulhA@athology-dev.4fnaw.mongodb.net/athology-dev?retryWrites=true&w=majority"
+)
+db = client["athology"]
+col = db["athletes"]
 
 
 def construct_response(f):
@@ -69,39 +76,66 @@ def _index(request: Request):
 @app.get("/get-all-athletes", tags=["Database"])
 @construct_response
 def _get_all_athletes(request: Request):
-    response = {
-        "message": HTTPStatus.OK.phrase,
-        "status-code": HTTPStatus.OK,
-    }
+    """Returns the `_id`, `first_name` and `last_name` for all athletes."""
+    results = []
+    for result in col.find({}, {"_id": 1, "first_name": 1, "last_name": 1}):
+        result["_id"] = str(result["_id"])
+        results.append(result)
+
+    response = {"message": HTTPStatus.OK.phrase, "status-code": HTTPStatus.OK, "data": results}
     return response
 
 
 @app.get("/get-athlete-by-id", tags=["Database"])
 @construct_response
-def _get_Athlete_by_id(request: Request, _id: str):
-    response = {
-        "message": HTTPStatus.OK.phrase,
-        "status-code": HTTPStatus.OK,
-    }
+def _get_athlete_by_id(request: Request, _id: str):
+    """Return the data for an athelete with id `_id`."""
+    result = col.find_one(
+        {"_id": ObjectId(_id)},
+    )
+    result["_id"] = str(result["_id"])
+
+    response = {"message": HTTPStatus.OK.phrase, "status-code": HTTPStatus.OK, "data": result}
     return response
 
 
 @app.post("/create-new-athlete", tags=["Database"])
 @construct_response
-def _create_new_athlete(request: Request, name: str):
+def _create_new_athlete(request: Request, first_name: str, last_name: str):
+    """Creates a new athlete with `first_name` and `last_name` and returns their `_id`.
+    created athlete.
+    """
+    result = col.insert_one({"first_name": first_name, "last_name": last_name})
+
     response = {
         "message": HTTPStatus.OK.phrase,
         "status-code": HTTPStatus.OK,
+        "data": {"_id": str(result.inserted_id)},
     }
+
     return response
 
 
 @app.post("/add-athlete-session", tags=["Database"])
 @construct_response
-def _add_Athlete_session(request: Request, _id: str, athlete_session: AthleteSession):
+def _add_athlete_session(request: Request, _id: str, athlete_session: AthleteSession):
+    """Adds or updates the session data for the athlete with id `_id` with `athlete_session`."""
+    athlete_session = athlete_session.dict()
+
+    query = {"_id": ObjectId(_id)}
+    result = col.find_one(query)
+
+    if "sessions" in result:
+        sessions = result["sessions"] + [athlete_session]
+    else:
+        sessions = [athlete_session]
+
+    result = col.update_one(query, {"$set": {"sessions": sessions}})
+
     response = {
         "message": HTTPStatus.OK.phrase,
         "status-code": HTTPStatus.OK,
+        "data": {"acknowledged": result.acknowledged},
     }
     return response
 
@@ -130,3 +164,6 @@ def _jump_detection(
         "data": {"is_jumping": is_jumping},
     }
     return response
+
+
+# %%
