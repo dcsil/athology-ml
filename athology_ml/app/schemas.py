@@ -44,6 +44,19 @@ class AccelerometerData(BaseModel):
         }
 
 
+class AthleteName(BaseModel):
+    first: str
+    last: str
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "first": "John",
+                "last": "Smith",
+            }
+        }
+
+
 class AthleteJump(BaseModel):
     load: float
     height: float
@@ -72,14 +85,17 @@ class AthleteSession(BaseModel):
 
 class AthleteData(BaseModel):
     _id: str
-    name: str
+    name: AthleteName
     sessions: List[AthleteSession]
 
     class Config:
         schema_extra = {
             "example": {
                 "_id": "28187aa4-89c5-11eb-8dcd-0242ac130003",
-                "name": "Laurie",
+                "name": {
+                    "first": "Laurie",
+                    "last": "Smith",
+                },
                 "sessions": [
                     {
                         "date": "30/01/2021",

@@ -16,6 +16,9 @@ typer = "^0.3.2"
 uvicorn = "^0.13.4"
 keras-tuner = { version = "^1.0.2", optional = true }
 sentry-sdk = { version = "^0.20.3", optional = true }
+wasabi = "^0.8.2"
+pymongo = "^3.11.3"
+dnspython = "^2.1.0"
 
 [tool.poetry.dev-dependencies]
 black = "^20.8b1"

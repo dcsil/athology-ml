@@ -27,7 +27,7 @@ poetry install
 To start the web service, run
 
 ```bash
-uvicorn app.main:app \
+uvicorn athology_ml.app.main:app \
     --host 0.0.0.0 \
     --port 80 \
     --reload
@@ -52,7 +52,7 @@ docker build -t athology-ml .
 Then you can create a container and run the web service with
 
 ```bash
-docker run -d --name athology-ml -p 80:80 -e MODULE_NAME="athology_ml.app.main" -e PORT="80" athology-ml
+docker run -d --name athology-ml -p 80:80 -e PORT="80" athology-ml
 ```
 
 Once the container has been created, you can stop/start it with
