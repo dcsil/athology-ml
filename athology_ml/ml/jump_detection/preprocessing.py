@@ -5,12 +5,22 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras.layers.experimental import preprocessing
 from tensorflow.data import Dataset
+import copy
 
 BUFFER_SIZE = 500
 
 TRAIN_FILE_PATTERN = "train/*.csv"
 VALID_FILE_PATTERN = "valid/*.csv"
 TEST_FILE_PATTERN = "test/*.csv"
+
+DATASET_KWARGS = {
+    "batch_size": 1,  # We will set up timesteps and batching below
+    "label_name": "is_air",
+    "select_columns": ["x-axis (g)", "y-axis (g)", "z-axis (g)", "is_air"],
+    "header": True,
+    "num_epochs": 1,  # Will set num_epochs within model.fit()
+    "shuffle": False,  # False to sample windows as they appear in the input
+}
 
 
 def pack_features_vector(features, labels):
@@ -63,14 +73,8 @@ def get_datasets(
     defaults set in this function. For details on these arguments,
     see: https://www.tensorflow.org/api_docs/python/tf/data/experimental/make_csv_dataset
     """
-    dataset_kwargs = {
-        "batch_size": 1,  # We will set up timesteps and batching below
-        "label_name": "is_air",
-        "select_columns": ["x-axis (g)", "y-axis (g)", "z-axis (g)", "is_air"],
-        "header": True,
-        "num_epochs": 1,  # Will set num_epochs within model.fit()
-        "shuffle": False,  # False to sample windows as they appear in the input
-    }
+
+    dataset_kwargs = copy.deepcopy(DATASET_KWARGS)
     dataset_kwargs.update(kwargs)
 
     train_file_pattern = str(Path(directory) / TRAIN_FILE_PATTERN)
@@ -128,7 +132,7 @@ def get_features_and_labels(
         all_features.append(features.reshape(-1, features.shape[-1]))
         all_labels.append(labels.reshape(-1))
 
-        if num_rows is not None and len(all_features) >= num_rows:
+        if num_rows is not None and len(all_features) == num_rows:
             break
 
     all_features = np.concatenate(all_features, axis=0)
