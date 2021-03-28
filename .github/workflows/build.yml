@@ -43,16 +43,11 @@ jobs:
           poetry run mypy .
       - name: Test with pytest
         run: |
-          poetry run pytest tests --cov-report=xml --cov ./app --cov-config=.coveragerc
-      - name: Upload coverage to Codecov
+          poetry run pytest tests --cov-report=xml --cov ./athology_ml --cov-config=.coveragerc
+      - name: Upload coverage to CodeClimate
         # We don't want to push coverge for every job in the matrix.
         # Rather arbitrarily, choose to push on Ubuntu with Python 3.9.
         if: matrix.python-version == '3.7' && matrix.os == 'ubuntu-latest' && (github.event_name == 'push' || github.event_name == 'pull_request')
-        uses: codecov/codecov-action@v1.2.1
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          file: ./coverage.xml
-          # Ignore codecov failures as the codecov server is not very reliable but we don't
-          # want to report a failure in the github UI just because the coverage report failed
-          # to be published.
-          fail_ci_if_error: false
+        uses: paambaati/codeclimate-action@v2.7.5
+        env:
+          CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}

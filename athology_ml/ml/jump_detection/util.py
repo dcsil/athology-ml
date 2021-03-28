@@ -38,16 +38,12 @@ def print_baselines(labels: np.ndarray) -> None:
     always_jumping_precision.update_state(labels, all_ones_prediction)
     always_jumping_recall.update_state(labels, all_ones_prediction)
 
-    print()
-    typer.secho("A random baseline (predict 0/1 at random, uniformly) achieves:", bold=True)
+    typer.secho("\nA random baseline (predict 0/1 at random, uniformly) achieves:", bold=True)
     typer.secho(f"  * precision: {random_baseline_precision.result().numpy():.4f}")
     typer.secho(f"  * recall:    {random_baseline_recall.result().numpy():.4f}")
-
     typer.secho("A never jumping baseline (always predict 0) achieves:", bold=True)
     typer.secho(f"  * precision: {never_jumping_precision.result().numpy():.4f}")
     typer.secho(f"  * recall:    {never_jumping_recall.result().numpy():.4f}")
-
     typer.secho("An always jumping baseline (always predict 1) achieves:", bold=True)
     typer.secho(f"  * precision: {always_jumping_precision.result().numpy():.4f}")
-    typer.secho(f"  * recall:    {always_jumping_recall.result().numpy():.4f}")
-    print()
+    typer.secho(f"  * recall:    {always_jumping_recall.result().numpy():.4f}\n")
