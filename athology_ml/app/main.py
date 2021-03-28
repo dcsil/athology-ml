@@ -164,6 +164,3 @@ def _jump_detection(
         "data": {"is_jumping": is_jumping},
     }
     return response
-
-
-# %%
