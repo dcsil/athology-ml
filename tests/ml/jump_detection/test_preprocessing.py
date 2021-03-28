@@ -1,10 +1,40 @@
+from typing import Tuple
+
 import hypothesis.strategies as st
 import numpy as np
 import pytest
 from athology_ml.ml.jump_detection import preprocessing
 from hypothesis import given
 from hypothesis.extra import numpy
+from tensorflow.data import Dataset
 from tensorflow.keras.layers.experimental.preprocessing import Normalization
+
+
+def test_pack_features_vector_correct_shape(
+    dummy_jump_detection_dataset: Tuple[Dataset, Dataset, Dataset]
+) -> None:
+    """Sanity check that feature and label vector packing produce tensors of the correct shape."""
+    train_dataset, _, _ = dummy_jump_detection_dataset
+    train_dataset = train_dataset.map(preprocessing.pack_features_vector)
+    num_features = 3
+    for features, labels in train_dataset.as_numpy_iterator():
+        assert features.shape == (num_features,)
+        assert labels.shape == (1,)
+
+
+def test_get_features_and_labels(
+    dummy_jump_detection_dataset: Tuple[Dataset, Dataset, Dataset]
+) -> None:
+    """Sanity check that get_features_and_labels returns tensors of the correct shape."""
+    train_dataset, _, _ = dummy_jump_detection_dataset
+    # get_features_and_labels expects pack_features_vector to have been called
+    train_dataset = train_dataset.map(preprocessing.pack_features_vector)
+    num_rows, num_features = 100, 3
+    all_features, all_labels = preprocessing.get_features_and_labels(
+        dataset=train_dataset, num_rows=num_rows
+    )
+    assert all_features.shape == (num_rows, num_features)
+    assert all_labels.shape == (num_rows,)
 
 
 @given(
@@ -15,7 +45,7 @@ from tensorflow.keras.layers.experimental.preprocessing import Normalization
         ),
     )
 )
-def test_get_classifier_bias_init(labels: np.ndarray):
+def test_get_classifier_bias_init(labels: np.ndarray) -> None:
     """Tests get_classifier_bias_init over a grid of random, two-dimensional bool arrays."""
     pos = labels.sum()
     neg = labels.size - pos
@@ -36,7 +66,7 @@ def test_get_classifier_bias_init(labels: np.ndarray):
         assert actual == expected
 
 
-def test_get_normalizer():
+def test_get_normalizer() -> None:
     """Sanity check that the normalization layer can be created with some valid training data."""
     # batch_size and timesteps are tuneable. Here we use similar values as used during training.
     # input_dim and output_dim are decided by the data and the feature_extractor layer respectively.
@@ -53,7 +83,7 @@ def test_get_normalizer():
     assert outputs.shape == (batch_size, timesteps, output_dim)
 
 
-def test_get_normalizer_value_error():
+def test_get_normalizer_value_error() -> None:
     """Check that the get_normalizer will return a ValueError for bad data."""
     # batch_size and timesteps are tuneable. Here we use similar values as used during training.
     # input_dim and output_dim are decided by the data and the feature_extractor layer respectively.

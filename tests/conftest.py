@@ -1,8 +1,15 @@
 import json
 import random
-
+from pathlib import Path
+from typing import Tuple
 
 import pytest
+import tensorflow as tf
+from athology_ml.ml.jump_detection.preprocessing import DATASET_KWARGS
+from tensorflow.data import Dataset
+
+FIXTURES_DIR = Path(__file__).parent.absolute() / "fixtures"
+NUM_TIMESTEPS = 128
 
 
 @pytest.fixture()
@@ -24,22 +31,14 @@ def dummy_accelerometer_data_unequal_timesteps(
     return json.dumps(request)
 
 
-# @pytest.fixture()
-# def dummy_jump_detection_dataset() -> Tuple[Dataset, Dataset, Dataset]:
-#     dataset_kwargs = {
-#         "batch_size": NUM_TIMESTEPS,  # This is actually the number of timesteps within a window
-#         "label_name": "is_air",
-#         "select_columns": ["x-axis (g)", "y-axis (g)", "z-axis (g)", "is_air"],
-#         "header": True,
-#         "num_epochs": 1,  # Will set num_epochs within model.fit()
-#         "shuffle": False,  # False to sample windows as they appear in the input
-#     }
-#     train_file_pattern = str(Path("tests/fixtures/data/jump_detection") / "train.tsv")
-#     valid_file_pattern = str(Path("tests/fixtures/data/jump_detection") / "valid.tsv")
-#     test_file_pattern = str(Path("tests/fixtures/data/jump_detection") / "test.tsv")
+@pytest.fixture()
+def dummy_jump_detection_dataset() -> Tuple[Dataset, Dataset, Dataset]:
+    train_file_pattern = str(FIXTURES_DIR / "data/jump_detection/train/*.csv")
+    valid_file_pattern = str(FIXTURES_DIR / "data/jump_detection/valid/*.csv")
+    test_file_pattern = str(FIXTURES_DIR / "data/jump_detection/test/*.csv")
 
-#     train_dataset = tf.data.experimental.make_csv_dataset(train_file_pattern, **dataset_kwargs)
-#     valid_dataset = tf.data.experimental.make_csv_dataset(valid_file_pattern, **dataset_kwargs)
-#     test_dataset = tf.data.experimental.make_csv_dataset(test_file_pattern, **dataset_kwargs)
+    train_dataset = tf.data.experimental.make_csv_dataset(train_file_pattern, **DATASET_KWARGS)
+    valid_dataset = tf.data.experimental.make_csv_dataset(valid_file_pattern, **DATASET_KWARGS)
+    test_dataset = tf.data.experimental.make_csv_dataset(test_file_pattern, **DATASET_KWARGS)
 
-#     return train_dataset, valid_dataset, test_dataset
+    return train_dataset, valid_dataset, test_dataset
