@@ -3,7 +3,7 @@ import numpy.testing as npt
 from athology_ml.ml import jump_detection
 
 
-def test_feature_extractor():
+def test_feature_extractor() -> None:
     # batch_size and timesteps are tuneable. Here we use similar values as used during training.
     # input_dim and output_dim are decided by the data and the feature_extractor layer respectively.
     batch_size, timesteps, input_dim, output_dim = 1, 128, 3, 5

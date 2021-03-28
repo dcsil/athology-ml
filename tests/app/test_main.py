@@ -3,20 +3,20 @@ from fastapi.testclient import TestClient
 import json
 
 
-def test_docs():
+def test_docs() -> None:
     with TestClient(main.app) as client:
         response = client.get("/docs")
         assert response.status_code == 200
 
 
-def test_health_check():
+def test_health_check() -> None:
     with TestClient(main.app) as client:
         response = client.get("/")
         assert response.status_code == 200
         assert response.json()["message"] == "OK"
 
 
-def test_jump_detection_endpoint(dummy_accelerometer_data: str):
+def test_jump_detection_endpoint(dummy_accelerometer_data: str) -> None:
     with TestClient(main.app) as client:
         response = client.post("/jump-detection", dummy_accelerometer_data)
         assert response.status_code == 200
@@ -27,7 +27,9 @@ def test_jump_detection_endpoint(dummy_accelerometer_data: str):
         assert [pred in [True, False] for pred in response.json()["data"]["is_jumping"]]
 
 
-def test_jump_detection_endpoint_unequal_timesteps(dummy_accelerometer_data_unequal_timesteps: str):
+def test_jump_detection_endpoint_unequal_timesteps(
+    dummy_accelerometer_data_unequal_timesteps: str,
+) -> None:
     with TestClient(main.app) as client:
         response = client.post("/jump-detection", dummy_accelerometer_data_unequal_timesteps)
         assert response.status_code == 422
