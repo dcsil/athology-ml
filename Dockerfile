@@ -20,3 +20,7 @@ COPY ./athology_ml/ /app/athology_ml
 # Because our main.py lives somewhere other than the default, we need to tell FastAPI where.
 # See: https://github.com/tiangolo/uvicorn-gunicorn-fastapi-docker#module_name
 ENV MODULE_NAME="athology_ml.app.main"
+# This is a hack to try to fit within Heroku's RAM limits. Each worker will consume some amount
+# of RAM, so my thinking is to restrict the FastAPI image to a single worker to use the least
+# amount of RAM.
+ENV MAX_WORKERS="1"
