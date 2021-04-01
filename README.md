@@ -68,7 +68,7 @@ docker start athology-ml
 If you want to train and tune your own model, please install with
 
 ```
-poetry install -E train
+poetry install -E ml
 ```
 
 Each model has its own subcommand. To see each subcommand, call
@@ -80,16 +80,16 @@ athology-ml --help
 For example, to train and tune a `jump-detection` model, call
 
 ```
-athology-ml jump-detection train path/to/dataset
+athology-ml jump-detection tune path/to/dataset
 ```
 
 For details on the arguments and options of any subcommand, invoke them with `--help`
 
 ```
-athology-ml jump-detection train --help
+athology-ml jump-detection tune --help
 ```
 
-In this case, we minimally need a path to a `directory` with a dataset of CSV files, structured like
+In this case, we minimally need a path to save the results of the hyperparameter tuning, `OUTPUT_DIR`, and a path to a `DATASET_DIR` with a dataset of CSV files, structured like
 
 ```
 .
