@@ -1,3 +1,4 @@
+from typing import Union
 from pathlib import Path
 
 import kerastuner
@@ -24,7 +25,7 @@ def tune(
             " the CSV files that will be used to train, tune and evaluate the model."
         ),
     ),
-    output_dir: str = typer.Argument(
+    output_dir: Union[str, Path] = typer.Argument(
         ...,
         help=(
             "Path to a directory where the results of the hyperparameter tuning will be saved,"
