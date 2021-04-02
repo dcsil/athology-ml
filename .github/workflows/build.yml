@@ -28,7 +28,7 @@ jobs:
         uses: abatilo/actions-poetry@v2.1.0
       - name: Install dependencies with Poetry
         run: |
-          poetry install --extras "train"
+          poetry install --extras "ml"
       - name: Format code with black
         run: |
           poetry run black .
