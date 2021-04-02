@@ -4,13 +4,13 @@ from http import HTTPStatus
 
 import numpy as np
 import pymongo
-import typer
 from athology_ml import __version__
 from athology_ml.app.schemas import AccelerometerData, AthleteSession, AthleteName
 from athology_ml.app.util import load_jump_detection_model
 from bson.objectid import ObjectId
 from fastapi import Depends, FastAPI, Request
 from tensorflow.keras import Model
+from athology_ml import msg
 
 app = FastAPI(
     title="Athology Backend and ML Web Services",
@@ -25,10 +25,7 @@ try:
     sentry_sdk.init(dsn="https://0c859b2275af41cf9f37eef75d2319ff@o358880.ingest.sentry.io/5603816")
     app.add_middleware(SentryAsgiMiddleware)
 except ImportError:
-    typer.secho(
-        "sentry-sdk is not installed. Not monitoring exceptions.", fg=typer.colors.YELLOW, bold=True
-    ),
-
+    msg.warn("sentry-sdk is not installed. Not monitoring exceptions.")
 
 client = pymongo.MongoClient(
     "mongodb+srv://admin:Dvr4smYFR0vYjCEd@jump-detection.mwnew.mongodb.net/jump-detection?retryWrites=true&w=majority"

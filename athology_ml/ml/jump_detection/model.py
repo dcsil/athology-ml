@@ -8,10 +8,6 @@ from tensorflow.keras import layers
 from tensorflow.keras.layers.experimental.preprocessing import Normalization
 
 METRICS = [
-    #   keras.metrics.TruePositives(name='tp'),
-    #   keras.metrics.FalsePositives(name='fp'),
-    #   keras.metrics.TrueNegatives(name='tn'),
-    #   keras.metrics.FalseNegatives(name='fn'),
     keras.metrics.BinaryAccuracy(name="accuracy"),
     keras.metrics.Precision(name="precision"),
     keras.metrics.Recall(name="recall"),
@@ -56,24 +52,26 @@ class JumpDetector(HyperModel):
         feature_extractor = FeatureExtractor()
         conv_1d = layers.Conv1D(
             filters=hp.Choice("filters", values=[8, 16, 32], default=32),
-            kernel_size=hp.Choice("kernel_size", values=[3, 5, 10, 12], default=5),
+            kernel_size=hp.Choice("kernel_size", values=[3, 5, 10], default=3),
             strides=1,
             padding="causal",
             activation="relu",
         )
-        dropout = layers.Dropout(hp.Choice("dropout_conv", values=[0.0, 0.1, 0.2, 0.25]))
+        dropout = layers.Dropout(
+            hp.Choice("dropout_conv", values=[0.0, 0.1, 0.2, 0.5], default=0.2)
+        )
         lstm_0 = layers.Bidirectional(
             layers.LSTM(
-                hp.Choice("units_0", values=[32, 64, 128, 256], default=128),
+                hp.Choice("units_0", values=[32, 64, 128], default=128),
                 return_sequences=True,
-                dropout=hp.Choice("dropout_lstm_0", values=[0.0, 0.1, 0.2, 0.25], default=0.1),
+                dropout=hp.Choice("dropout_lstm_0", values=[0.0, 0.1, 0.2, 0.5], default=0.1),
             )
         )
         lstm_1 = layers.Bidirectional(
             layers.LSTM(
-                hp.Choice("units_1", values=[32, 64, 128, 256], default=128),
+                hp.Choice("units_1", values=[32, 64, 128], default=32),
                 return_sequences=True,
-                dropout=hp.Choice("dropout_lstm_1", values=[0.0, 0.1, 0.2, 0.25], default=0.1),
+                dropout=hp.Choice("dropout_lstm_1", values=[0.0, 0.1, 0.2, 0.5], default=0.2),
             )
         )
         classifier = layers.Dense(
@@ -96,10 +94,12 @@ class JumpDetector(HyperModel):
         model.compile(
             optimizer=keras.optimizers.Adam(
                 hp.Choice(
-                    "learning_rate", values=[5e-3, 1e-3, 5e-4, 1e-4, 5e-5, 1e-5], default=1e-4
+                    "learning_rate", values=[5e-3, 3e-3, 1e-3, 5e-4, 3e-4, 1e-4], default=5e-4
                 )
             ),
-            loss="binary_crossentropy",
+            loss=keras.losses.BinaryCrossentropy(
+                label_smoothing=hp.Choice("label_smoothing", values=[0.0, 0.05, 0.1], default=0.0)
+            ),
             metrics=METRICS,
         )
 
