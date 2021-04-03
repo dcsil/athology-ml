@@ -30,6 +30,5 @@ ENV MAX_WORKERS="1"
 # env file, and finally we call a modifed start script that passes these enviornment variables to
 # our app.
 # For details, see: https://secrethub.io/docs/start/deploy/other/
-RUN if [ -n "$SECRETHUB_CREDENTIAL" ] ; then curl https://apt.secrethub.io | bash ; fi
-RUN if [ -n "$SECRETHUB_CREDENTIAL" ] ; then cp ./secrethub.env /app/ ; fi
+COPY ./secrethub.env /app/
 COPY ./bin/start.sh /

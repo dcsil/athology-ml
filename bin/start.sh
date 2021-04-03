@@ -33,6 +33,7 @@ fi
 # This is the only line of the file we have modified. We need to wrap the call to Gunicorn
 # with secrethub run -- in order to access our secrets.
 if [ -n "$SECRETHUB_CREDENTIAL" ] ; then
+    curl https://apt.secrethub.io | bash
     exec secrethub run --var env=prod -- gunicorn -k "$WORKER_CLASS" -c "$GUNICORN_CONF" "$APP_MODULE"
 else
     exec gunicorn -k "$WORKER_CLASS" -c "$GUNICORN_CONF" "$APP_MODULE"
