@@ -31,7 +31,10 @@ else
 fi
 
 # This is the only line of the file we have modified. We need to wrap the call to Gunicorn
-# with secrethub run -- in order to access our secrets.
+# with secrethub run -- in order to access our secrets. Effectively, we assume that if
+# SECRETHUB_CREDENTIAL exists, we are in a production enviornment. In the future, it would be
+# better to control dev/prod enviornments with another enviornment variable rather than hijack
+# this one.
 if [ -n "$SECRETHUB_CREDENTIAL" ] ; then
     echo "SECRETHUB_CREDENTIAL was found, passing secrets to server"
     exec secrethub run --var env=prod -- gunicorn -k "$WORKER_CLASS" -c "$GUNICORN_CONF" "$APP_MODULE"
