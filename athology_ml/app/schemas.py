@@ -86,12 +86,16 @@ class AthleteSession(BaseModel):
 class AthleteData(BaseModel):
     _id: str
     name: AthleteName
+    # For enterprise customers, this is the email that registered this athlete.
+    # For individual customers, this represents a personal email.
+    email: str
     sessions: List[AthleteSession]
 
     class Config:
         schema_extra = {
             "example": {
                 "_id": "28187aa4-89c5-11eb-8dcd-0242ac130003",
+                "email": "johndoe@example.com",
                 "name": {
                     "first": "Laurie",
                     "last": "Smith",

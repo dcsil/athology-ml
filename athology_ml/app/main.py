@@ -1,16 +1,24 @@
+import os
 from datetime import datetime
 from functools import wraps
 from http import HTTPStatus
 
 import numpy as np
 import pymongo
-from athology_ml import __version__
-from athology_ml.app.schemas import AccelerometerData, AthleteSession, AthleteName
+from athology_ml import __version__, msg
+from athology_ml.app.schemas import AccelerometerData, AthleteName, AthleteSession
 from athology_ml.app.util import load_jump_detection_model
 from bson.objectid import ObjectId
 from fastapi import Depends, FastAPI, Request
+from fastapi.security import OAuth2PasswordRequestForm
+from fastapi_login import LoginManager
+from fastapi_login.exceptions import InvalidCredentialsException
 from tensorflow.keras import Model
-from athology_ml import msg
+
+DB_USER = os.environ.get("DB_USER", "development")
+DB_PASSWORD = os.environ.get("DB_PASSWORD", "development")
+SENTRY_SDK_DSN = os.environ.get("SENTRY_SDK_DSN")
+LOGIN_MANAGER_SECRET = os.environ.get("LOGIN_MANAGER_SECRET")
 
 app = FastAPI(
     title="Athology Backend and ML Web Services",
@@ -22,16 +30,69 @@ try:
     import sentry_sdk
     from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 
-    sentry_sdk.init(dsn="https://0c859b2275af41cf9f37eef75d2319ff@o358880.ingest.sentry.io/5603816")
-    app.add_middleware(SentryAsgiMiddleware)
+    if SENTRY_SDK_DSN:
+        sentry_sdk.init(dsn=SENTRY_SDK_DSN)
+        app.add_middleware(SentryAsgiMiddleware)
+    else:
+        msg.warn("sentry-sdk DSN not provided. is not installed. Not monitoring exceptions.")
 except ImportError:
     msg.warn("sentry-sdk is not installed. Not monitoring exceptions.")
 
 client = pymongo.MongoClient(
-    "mongodb+srv://admin:Dvr4smYFR0vYjCEd@jump-detection.mwnew.mongodb.net/jump-detection?retryWrites=true&w=majority"
+    f"mongodb+srv://{DB_USER}:{DB_PASSWORD}@jump-detection.mwnew.mongodb.net/jump-detection?retryWrites=true&w=majority"
 )
-db = client["development"]
-col = db["athletes"]
+database = "development" if DB_USER == "development" else "production"
+db = client[database]
+users_col = db["users"]
+athletes_col = db["athletes"]
+
+if not LOGIN_MANAGER_SECRET:
+    LOGIN_MANAGER_SECRET = os.urandom(24).hex()
+    msg.warn(
+        f"LOGIN_MANAGER_SECRET enviornment variable not found. Defaulting to: {LOGIN_MANAGER_SECRET}"
+    )
+manager = LoginManager(LOGIN_MANAGER_SECRET, tokenUrl="/auth/login")
+
+
+@manager.user_loader
+def _load_user(email: str):
+    user = users_col.find_one(
+        {"email": email},
+    )
+    return user
+
+
+@app.post("/auth/signup")
+def _signup(data: OAuth2PasswordRequestForm = Depends()):
+    email = data.username
+    password = data.password
+    user = _load_user(email)
+
+    response = {"message": HTTPStatus.OK.phrase, "status-code": HTTPStatus.OK, "data": {}}
+
+    if user:
+        response["message"] = "An account for that email address already exists"
+        response["status-code"] = HTTPStatus.BAD_REQUEST
+    else:
+        result = users_col.insert_one({"email": email, "password": password})
+        response["data"] = ({"acknowledged": result.acknowledged},)
+
+    return response
+
+
+@app.post("/auth/login")
+def _login(data: OAuth2PasswordRequestForm = Depends()):
+    email = data.username
+    password = data.password
+
+    user = _load_user(email)
+    if not user:
+        raise InvalidCredentialsException
+    elif password != user["password"]:
+        raise InvalidCredentialsException
+
+    access_token = manager.create_access_token(data=dict(sub=email))
+    return {"access_token": access_token, "token_type": "bearer"}
 
 
 def construct_response(f):
@@ -73,10 +134,10 @@ def _index(request: Request):
 
 @app.get("/get-all-athletes", tags=["Database"])
 @construct_response
-def _get_all_athletes(request: Request):
+def _get_all_athletes(request: Request, user=Depends(manager)):
     """Returns the `_id`, `first_name` and `last_name` for all athletes."""
     results = []
-    for result in col.find({}, {"_id": 1, "name": 1}):
+    for result in athletes_col.find({"email": user["email"]}, {"_id": 1, "name": 1}):
         result["_id"] = str(result["_id"])
         results.append(result)
 
@@ -86,10 +147,10 @@ def _get_all_athletes(request: Request):
 
 @app.get("/get-athlete-by-id", tags=["Database"])
 @construct_response
-def _get_athlete_by_id(request: Request, _id: str):
+def _get_athlete_by_id(request: Request, _id: str, user=Depends(manager)):
     """Return the data for an athelete with id `_id`."""
-    result = col.find_one(
-        {"_id": ObjectId(_id)},
+    result = athletes_col.find_one(
+        {"_id": ObjectId(_id), "email": user["email"]},
     )
     result["_id"] = str(result["_id"])
 
@@ -99,10 +160,9 @@ def _get_athlete_by_id(request: Request, _id: str):
 
 @app.post("/create-new-athlete", tags=["Database"])
 @construct_response
-def _create_new_athlete(request: Request, name: AthleteName):
+def _create_new_athlete(request: Request, name: AthleteName, user=Depends(manager)):
     """Creates a new athlete with `name` returns their `_id`."""
-    print(name.dict())
-    result = col.insert_one({"name": name.dict()})
+    result = athletes_col.insert_one({"name": name.dict(), "email": user["email"]})
 
     response = {
         "message": HTTPStatus.OK.phrase,
@@ -115,19 +175,21 @@ def _create_new_athlete(request: Request, name: AthleteName):
 
 @app.post("/add-athlete-session", tags=["Database"])
 @construct_response
-def _add_athlete_session(request: Request, _id: str, athlete_session: AthleteSession):
+def _add_athlete_session(
+    request: Request, _id: str, athlete_session: AthleteSession, user=Depends(manager)
+):
     """Adds or updates the session data for the athlete with id `_id` with `athlete_session`."""
     athlete_session = athlete_session.dict()
 
-    query = {"_id": ObjectId(_id)}
-    result = col.find_one(query)
+    query = {"_id": ObjectId(_id), "email": user["email"]}
+    result = athletes_col.find_one(query)
 
     if "sessions" in result:
         sessions = result["sessions"] + [athlete_session]
     else:
         sessions = [athlete_session]
 
-    result = col.update_one(query, {"$set": {"sessions": sessions}})
+    result = athletes_col.update_one(query, {"$set": {"sessions": sessions}})
 
     response = {
         "message": HTTPStatus.OK.phrase,
