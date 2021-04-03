@@ -18,7 +18,7 @@ RUN poetry install --no-root --no-dev --extras "production"
 
 COPY ./athology_ml/ /app/athology_ml
 
-# Because our main.py lives somewhere other than the default, we need to tell FastAPI where.
+# Because our main.py lives somewhere other than the default, we need Xto tell FastAPI where.
 # See: https://github.com/tiangolo/uvicorn-gunicorn-fastapi-docker#module_name
 ENV MODULE_NAME="athology_ml.app.main"
 # This is a hack to try to fit within Heroku's RAM limits. Each worker will consume some amount
@@ -30,5 +30,6 @@ ENV MAX_WORKERS="1"
 # env file, and finally we call a modifed start script that passes these enviornment variables to
 # our app.
 # For details, see: https://secrethub.io/docs/start/deploy/other/
+RUN curl https://apt.secrethub.io | bash
 COPY ./secrethub.env /app/
 COPY ./bin/start.sh /
