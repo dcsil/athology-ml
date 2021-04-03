@@ -112,3 +112,10 @@ class AthleteData(BaseModel):
                 ],
             }
         }
+
+
+class User(BaseModel):
+    _id: str
+    email: str
+    salt: bytes
+    key: bytes
