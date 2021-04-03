@@ -6,7 +6,8 @@ from http import HTTPStatus
 import numpy as np
 import pymongo
 from athology_ml import __version__, msg
-from athology_ml.app.schemas import AccelerometerData, AthleteName, AthleteSession
+from athology_ml.app import util
+from athology_ml.app.schemas import AccelerometerData, AthleteName, AthleteSession, User
 from athology_ml.app.util import load_jump_detection_model
 from bson.objectid import ObjectId
 from fastapi import Depends, FastAPI, Request
@@ -41,6 +42,7 @@ except ImportError:
 client = pymongo.MongoClient(
     f"mongodb+srv://{DB_USER}:{DB_PASSWORD}@jump-detection.mwnew.mongodb.net/jump-detection?retryWrites=true&w=majority"
 )
+
 database = "development" if DB_USER == "development" else "production"
 db = client[database]
 users_col = db["users"]
@@ -55,7 +57,7 @@ manager = LoginManager(LOGIN_MANAGER_SECRET, tokenUrl="/auth/login")
 
 
 @manager.user_loader
-def _load_user(email: str):
+def _load_user(email: str) -> User:
     user = users_col.find_one(
         {"email": email},
     )
@@ -74,7 +76,8 @@ def _signup(data: OAuth2PasswordRequestForm = Depends()):
         response["message"] = "An account for that email address already exists"
         response["status-code"] = HTTPStatus.BAD_REQUEST
     else:
-        result = users_col.insert_one({"email": email, "password": password})
+        salt, key = util.salt_password(password)
+        result = users_col.insert_one({"email": email, "salt": salt, "key": key})
         response["data"] = ({"acknowledged": result.acknowledged},)
 
     return response
@@ -88,7 +91,9 @@ def _login(data: OAuth2PasswordRequestForm = Depends()):
     user = _load_user(email)
     if not user:
         raise InvalidCredentialsException
-    elif password != user["password"]:
+
+    _, key = util.salt_password(password, user["salt"])
+    if key != user["key"]:
         raise InvalidCredentialsException
 
     access_token = manager.create_access_token(data=dict(sub=email))
