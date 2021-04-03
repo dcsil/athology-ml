@@ -26,9 +26,8 @@ ENV MODULE_NAME="athology_ml.app.main"
 # amount of RAM.
 ENV MAX_WORKERS="1"
 
-# Here we setup secrethub. First we install the secrethub-cli, then we copy our secret references
-# env file, and finally we call a modifed start script that passes these enviornment variables to
-# our app.
+# Setup secrethub. First we install the secrethub-cli, then we copy our secret references env file,
+# and finally we call a modifed start script that passes these enviornment variables to our app.
 # For details, see: https://secrethub.io/docs/start/deploy/other/
 RUN curl https://apt.secrethub.io | bash
 COPY ./secrethub.env /app/
