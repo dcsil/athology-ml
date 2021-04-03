@@ -19,6 +19,8 @@ sentry-sdk = { version = "^1.0.0", optional = true }
 wasabi = "^0.8.2"
 pymongo = "^3.11.3"
 dnspython = "^2.1.0"
+fastapi-login = "^1.5.3"
+python-multipart = "^0.0.5"
 
 [tool.poetry.dev-dependencies]
 black = "^20.8b1"
