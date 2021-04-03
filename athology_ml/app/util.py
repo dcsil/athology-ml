@@ -22,7 +22,9 @@ def load_jump_detection_model() -> Model:
 
 
 def salt_password(password: str, salt: Optional[bytes] = None, iterations: int = 100000):
-    """Hashes passwords with pbkdf2_hmac. If `salt` is not provided, a new salt is generated."""
+    """Hashes passwords with pbkdf2_hmac. If `salt` is not provided, a new salt is generated.
+    See: https://nitratine.net/blog/post/how-to-hash-passwords-in-python/ for details.
+    """
     salt = os.urandom(32) if salt is None else salt
     key = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, iterations)
     return salt, key
