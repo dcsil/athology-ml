@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "athology-ml"
 version = "0.1.0"
-description = "Exposes several REST API endpoints for computation and prediction on accelerometer data."
+description = "The Athology backend. Exposes several REST endpoints for authentication, interacting with the database, and ML/AI."
 authors = ["johngiorgi <johnmgiorgi@gmail.com>"]
 readme = "README.md"
 repository = "https://github.com/dcsil/athology-ml"
