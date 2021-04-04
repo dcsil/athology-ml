@@ -11,6 +11,7 @@ from athology_ml.app.schemas import AccelerometerData, AthleteName, AthleteSessi
 from athology_ml.app.util import load_jump_detection_model
 from bson.objectid import ObjectId
 from fastapi import Depends, FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi_login import LoginManager
 from fastapi_login.exceptions import InvalidCredentialsException
@@ -39,6 +40,18 @@ try:
 except ImportError:
     msg.warn("sentry-sdk is not installed. Not monitoring exceptions.")
 
+
+origins = [
+    "*",
+]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 client = pymongo.MongoClient(
     f"mongodb+srv://{DB_USER}:{DB_PASSWORD}@jump-detection.mwnew.mongodb.net/jump-detection?retryWrites=true&w=majority"
 )
@@ -64,8 +77,9 @@ def _load_user(email: str) -> User:
     return user
 
 
-@app.post("/auth/signup")
+@app.post("/auth/signup", tags=["Authentication"])
 def _signup(data: OAuth2PasswordRequestForm = Depends()):
+    """Sign up with the provided user and password, if they don't already exist."""
     email = data.username
     password = data.password
     user = _load_user(email)
@@ -83,8 +97,9 @@ def _signup(data: OAuth2PasswordRequestForm = Depends()):
     return response
 
 
-@app.post("/auth/login")
+@app.post("/auth/login", tags=["Authentication"])
 def _login(data: OAuth2PasswordRequestForm = Depends()):
+    """Login with the provided user and password, if they exist."""
     email = data.username
     password = data.password
 
