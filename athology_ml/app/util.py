@@ -30,7 +30,7 @@ def salt_password(password: str, salt: Optional[bytes] = None, iterations: int =
     return salt, key
 
 
-def filter_predictions(predictions: List[bool], window_size: int = 20) -> List[bool]:
+def filter_predictions(predictions: List[bool], window_size: int = 25) -> List[bool]:
     predictions = predictions[:]
     for i in range(len(predictions) - 1):
         start = min(0, i - window_size)
