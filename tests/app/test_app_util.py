@@ -26,3 +26,21 @@ def test_salt_password_with_salt(expected_salt: bytes, expected_password: str) -
     )
     assert actual_salt == expected_salt
     assert isinstance(actual_password, bytes)
+
+
+def test_filter_predictions() -> None:
+    window_size = 5
+    predictions = [False, True, True, True, True, False]
+    expected = [False, False, False, False, False, False]
+    actual = util.filter_predictions(predictions, window_size=window_size)
+    assert actual == expected
+
+    predictions = [False, True, True, True, True, True]
+    expected = [False, True, True, True, True, True]
+    actual = util.filter_predictions(predictions, window_size=window_size)
+    assert actual == expected
+
+    predictions = [True, True, True, True, True, False]
+    expected = [True, True, True, True, True, False]
+    actual = util.filter_predictions(predictions, window_size=window_size)
+    assert actual == expected
