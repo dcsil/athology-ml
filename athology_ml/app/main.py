@@ -8,7 +8,6 @@ import pymongo
 from athology_ml import __version__, msg
 from athology_ml.app import util
 from athology_ml.app.schemas import AccelerometerData, AthleteName, AthleteSession, User
-from athology_ml.app.util import load_jump_detection_model
 from bson.objectid import ObjectId
 from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -224,7 +223,7 @@ def _add_athlete_session(
 def _jump_detection(
     request: Request,
     accelerometer_data: AccelerometerData,
-    model: Model = Depends(load_jump_detection_model),
+    model: Model = Depends(util.load_jump_detection_model),
 ):
     """Given one or more timesteps of accelerometer data, predicts whether the athlete is
     jumping (`True`) or not (`False`) at each timestep. The predictions are available at
@@ -236,6 +235,7 @@ def _jump_detection(
         accelerometer_data.x + accelerometer_data.y + accelerometer_data.z, dtype=np.int32
     ).reshape(1, -1, 3)
     is_jumping = (model.predict(input_data) >= 0.5).reshape(-1).tolist()
+    is_jumping = util.filter_predictions(is_jumping)
 
     response = {
         "message": HTTPStatus.OK.phrase,

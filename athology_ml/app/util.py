@@ -2,7 +2,7 @@ import hashlib
 import os
 from functools import lru_cache
 from pathlib import Path
-from typing import Optional
+from typing import List, Optional
 
 import tensorflow as tf
 from athology_ml.ml.jump_detection.modules import FeatureExtractor
@@ -28,3 +28,15 @@ def salt_password(password: str, salt: Optional[bytes] = None, iterations: int =
     salt = os.urandom(32) if salt is None else salt
     key = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, iterations)
     return salt, key
+
+
+def filter_predictions(predictions: List[bool], window_size: int = 20) -> List[bool]:
+    predictions = predictions[:]
+    for i in range(len(predictions) - 1):
+        start = min(0, i - window_size)
+        if predictions[i] and (not predictions[i + 1] or i == len(predictions) - 1):
+            start = max(0, i - window_size)
+            end = min(start + window_size, len(predictions))
+            if sum(predictions[start:end]) < window_size:
+                predictions[start:end] = [False] * len(predictions[start:end])
+    return predictions
