@@ -65,7 +65,7 @@ if not LOGIN_MANAGER_SECRET:
     msg.warn(
         f"LOGIN_MANAGER_SECRET enviornment variable not found. Defaulting to: {LOGIN_MANAGER_SECRET}"
     )
-manager = LoginManager(LOGIN_MANAGER_SECRET, tokenUrl="/auth/login")
+manager = LoginManager(LOGIN_MANAGER_SECRET, token_url="/auth/login")
 
 
 @manager.user_loader
